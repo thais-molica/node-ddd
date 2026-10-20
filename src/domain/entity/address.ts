@@ -27,6 +27,10 @@ export default class Address {
         return this._city;
     }
 
+    toString(): string {
+        return `${this.street}, ${this.number}, ${this.zip}, ${this.city}`;
+    }
+
     validate() {
         if (!this._street) {
             throw new Error('Street is required');

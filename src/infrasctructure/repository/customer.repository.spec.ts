@@ -114,4 +114,30 @@ describe("Customer repository test", () => {
 
     });
 
+    it('should load persisted customers without publishing events', async () => {
+        const repository = new CustomerRepository();
+        const customer = new Customer('123', 'Maria');
+        customer.changeAddress(new Address('Rua A', 1, 'zip', 'city'));
+        customer.deactivate();
+        customer.addRewardPoints(50);
+        await repository.create(customer);
+        const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+        try {
+            const found = await repository.find('123');
+            const all = await repository.findAll();
+
+            expect(log).not.toHaveBeenCalled();
+            expect(found.isActive()).toBe(false);
+            expect(found.rewardPoints).toBe(50);
+            expect(all[0].isActive()).toBe(false);
+            expect(all[0].rewardPoints).toBe(50);
+
+            found.changeAddress(new Address('Rua B', 2, 'zip', 'city'));
+            expect(log).toHaveBeenCalledTimes(1);
+            expect(log).toHaveBeenCalledWith('Endereço do cliente: 123, Maria alterado para: Rua B, 2, zip, city');
+        } finally {
+            log.mockRestore();
+        }
+    });
 });
